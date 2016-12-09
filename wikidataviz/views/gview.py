@@ -128,23 +128,3 @@ class GraphView(Resource):
         self.get_node_labels(vgraph)
 
         return node_link_data(vgraph)
-
-
-class InfoView(Resource):
-    def __init__(self):
-        self.parser = RequestParser()
-        self.parser.add_argument('url', type=str, required=True)
-
-    def get(self):
-        args = self.parser.parse_args()
-        url = args['url']
-
-        us = url.split('/')
-        id = us[len(us) - 1]
-
-        rv = requests.get(url, headers={'Accept': 'application/json'})
-        info = rv.json()
-
-        return info.get('entities', {}).get(id, {}).get('labels', {}).get('en',
-                                                                          {}).get(
-            'value', None)

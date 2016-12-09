@@ -8,7 +8,6 @@ api = Api(app)
 from wikidataviz.views.gview import GraphView, InfoView
 
 api.add_resource(GraphView, '/entity')
-api.add_resource(InfoView, '/info')
 
 
 @app.route('/<string:qid>')
