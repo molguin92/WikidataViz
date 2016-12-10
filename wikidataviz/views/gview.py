@@ -27,11 +27,10 @@ def populate_network_graph(uriref, depth=2):
     This functions populates the network graph for a specific RDF entity in
     a recursive manner.
 
-    :param vg: The NetworkX graph to populate.
     :param uriref: The rdf entity which is to be considered as the root for
     this level.
     :param depth: How many recursive steps to perform.
-    :return:
+    :return: The networkX graph representing the given entity.
     """
 
     vg = networkx.Graph()
@@ -119,45 +118,36 @@ def paralellized_populate_network_graph(uriref, depth=2):
     return vg
 
 
+def get_label(node):
+    q_id = node.split('/')[-1]
+    rv = requests.get(node, headers={'Accept': 'application/json'})
+    info = rv.json()
+    label = info.get('entities', {}) \
+        .get(q_id, {}).get('labels', {}) \
+        .get('en', {}).get('value', None)
+
+    return label
+
+
+def get_node_labels(vgraph):
+    nodes = vgraph.nodes()
+    with multiprocessing.Pool(processes=4) as pool:
+        labels = pool.map(get_label, nodes)
+        nodes_labels = dict(zip(nodes, labels))
+        set_node_attributes(vgraph, 'label', nodes_labels)
+
+
 class GraphView(Resource):
     def __init__(self):
         self.parser = RequestParser()
         self.parser.add_argument('id', type=str, required=True)
         self.lock = threading.RLock()
 
-    def get_label(self, node, label_dict):
-        q_id = node.split('/')[-1]
-        rv = requests.get(node, headers={'Accept': 'application/json'})
-        info = rv.json()
-        label = info.get('entities', {}) \
-            .get(q_id, {}).get('labels', {}) \
-            .get('en', {}).get('value', None)
-
-        with self.lock:
-            label_dict[node] = label
-
-    def get_node_labels(self, vgraph):
-
-        nodes = vgraph.nodes()
-        nodes_labels = {}
-        threads = []
-
-        for node in nodes:
-            t = threading.Thread(target=self.get_label,
-                                 args=(node, nodes_labels))
-            t.start()
-            threads.append(t)
-
-        for t in threads:
-            t.join()
-
-        set_node_attributes(vgraph, 'label', nodes_labels)
-
     def get(self):
         args = self.parser.parse_args()
         id = args['id']
 
         vgraph = paralellized_populate_network_graph(wd[id])
-        self.get_node_labels(vgraph)
+        get_node_labels(vgraph)
 
         return node_link_data(vgraph)
