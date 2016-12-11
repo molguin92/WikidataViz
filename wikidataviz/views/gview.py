@@ -2,13 +2,13 @@ import multiprocessing
 
 import networkx
 import rdflib
-import requests
 from flask_restful import Resource
 from flask_restful.reqparse import RequestParser
-from networkx import set_node_attributes, compose
+from networkx import compose
 from networkx.readwrite.json_graph import node_link_data
 from rdflib import Namespace, RDF
 from rdflib.exceptions import UniquenessError
+from wikidataviz.models.jobs import enqueue_job_and_return
 
 wikibase = Namespace('http://wikiba.se/ontology-beta#')
 wd = Namespace('http://www.wikidata.org/entity/')
@@ -65,7 +65,8 @@ def populate_network_graph(uriref, depth=2):
 
                 if value in g.subjects(RDF.type, wikibase.Item):
                     vg.add_node(value, label=get_english_label(g, value))
-                    vg.add_edge(uriref, value, label=get_english_label(g, prop))
+                    vg.add_edge(uriref, value,
+                                label=get_english_label(g, prop))
 
                     if depth - 1 > 0:
                         vg2 = populate_network_graph(depth - 1)(value)
@@ -121,6 +122,10 @@ def parallel_populate_network_graph(uriref, depth=2):
     return vg
 
 
+def deferred_graph_build(uriref):
+    return node_link_data(parallel_populate_network_graph(uriref))
+
+
 class GraphView(Resource):
     def __init__(self):
         self.parser = RequestParser()
@@ -130,6 +135,4 @@ class GraphView(Resource):
         args = self.parser.parse_args()
         id = args['id']
 
-        vgraph = parallel_populate_network_graph(wd[id])
-
-        return node_link_data(vgraph)
+        return enqueue_job_and_return(deferred_graph_build, wd[id])

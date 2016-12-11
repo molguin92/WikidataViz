@@ -34,5 +34,38 @@
 </style>
 <body>
 <script>
-    d3.json("/entity?id=" + "{{ data|safe }}", drawGraph);
+    function get_job_result(job_id) {
+        var req = new XMLHttpRequest();
+        req.open('GET', "/job?id=" + job_id, true);
+        req.send();
+        req.onreadystatechange = function (e) {
+            if (req.readyState == 4 && req.status == 200) {
+                var result = JSON.parse(req.responseText).result;
+                drawGraph(result);
+            }
+            else if (req.readyState == 4) {
+                setTimeout(function () {
+                    get_job_result(job_id);
+                }, 1000);
+            }
+        }
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "/entity?id=" + "{{ data|safe }}", true);
+    xhr.send();
+
+    xhr.addEventListener("readystatechange", function (e) {
+            if (xhr.readyState == 4 && xhr.status == 202) {
+                // request done
+                var job_info = JSON.parse(xhr.responseText);
+                console.log(xhr.responseText);
+                var job_id = job_info.job;
+                setTimeout(function () {
+                    get_job_result(job_id);
+                }, 1000);
+            }
+        },
+        false
+    );
 </script>
