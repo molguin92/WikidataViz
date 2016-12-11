@@ -1,15 +1,14 @@
-import threading
 import multiprocessing
 
 import networkx
 import rdflib
+import requests
 from flask_restful import Resource
 from flask_restful.reqparse import RequestParser
-from networkx.readwrite.json_graph import node_link_data
 from networkx import set_node_attributes, compose
+from networkx.readwrite.json_graph import node_link_data
 from rdflib import Namespace, RDF
 from rdflib.exceptions import UniquenessError
-import requests
 
 wikibase = Namespace('http://wikiba.se/ontology-beta#')
 wd = Namespace('http://www.wikidata.org/entity/')
@@ -17,9 +16,13 @@ schema = Namespace('http://schema.org/')
 wdata = Namespace('https://www.wikidata.org/wiki/Special:EntityData/')
 
 
-def extract_literal_value(node):
-    t, l = node
-    return l.value
+def get_english_label(rdf_g, subject):
+    labels = rdf_g.preferredLabel(subject, lang='en')
+    if len(labels) > 0:
+        lprop, label = labels[0]
+        return str(label)
+    else:
+        return None
 
 
 def populate_network_graph(uriref, depth=2):
@@ -32,15 +35,14 @@ def populate_network_graph(uriref, depth=2):
     :param depth: How many recursive steps to perform.
     :return: The networkX graph representing the given entity.
     """
-
-    vg = networkx.Graph()
-    vg.add_node(uriref)
-
     if depth < 1:
-        return vg
+        return networkx.Graph()
 
     g = rdflib.Graph()
     g.load(uriref)
+
+    vg = networkx.Graph()
+    vg.add_node(uriref, label=get_english_label(g, uriref))
 
     for prop, p, o in g.triples((None, RDF.type, wikibase.Property)):
         dclaim = g.value(subject=prop, predicate=wikibase.directClaim)
@@ -51,8 +53,8 @@ def populate_network_graph(uriref, depth=2):
                 continue
 
             if value in g.subjects(RDF.type, wikibase.Item):
-                vg.add_node(value)
-                vg.add_edge(uriref, value)
+                vg.add_node(value, label=get_english_label(g, value))
+                vg.add_edge(uriref, value, label=get_english_label(g, prop))
 
                 if depth - 1 > 0:
                     vg2 = populate_network_graph(depth - 1)(value)
@@ -62,8 +64,8 @@ def populate_network_graph(uriref, depth=2):
             for s, p, value in g.triples((uriref, dclaim, None)):
 
                 if value in g.subjects(RDF.type, wikibase.Item):
-                    vg.add_node(value)
-                    vg.add_edge(uriref, value)
+                    vg.add_node(value, label=get_english_label(g, value))
+                    vg.add_edge(uriref, value, label=get_english_label(g, prop))
 
                     if depth - 1 > 0:
                         vg2 = populate_network_graph(depth - 1)(value)
@@ -72,17 +74,18 @@ def populate_network_graph(uriref, depth=2):
     return vg
 
 
-def paralellized_populate_network_graph(uriref, depth=2):
-    vg = networkx.Graph()
-    vg.add_node(uriref)
-
-    if depth < 1:
-        return vg
+def parallel_populate_network_graph(uriref, depth=2):
+    print('Building relationship graph for {}.'.format(uriref))
 
     item_l = []
 
     g = rdflib.Graph()
     g.load(uriref)
+
+    vg = networkx.Graph()
+    vg.add_node(uriref, label=get_english_label(g, uriref))
+    if depth < 1:
+        return vg
 
     for prop, p, o in g.triples((None, RDF.type, wikibase.Property)):
         dclaim = g.value(subject=prop, predicate=wikibase.directClaim)
@@ -94,8 +97,8 @@ def paralellized_populate_network_graph(uriref, depth=2):
                 continue
 
             if value in g.subjects(RDF.type, wikibase.Item):
-                vg.add_node(value)
-                vg.add_edge(uriref, value)
+                vg.add_node(value, label=get_english_label(g, value))
+                vg.add_edge(uriref, value, property=prop)
 
                 if depth - 1 > 0:
                     item_l.append((value, depth - 1))
@@ -104,13 +107,13 @@ def paralellized_populate_network_graph(uriref, depth=2):
             for s, p, value in g.triples((uriref, dclaim, None)):
 
                 if value in g.subjects(RDF.type, wikibase.Item):
-                    vg.add_node(value)
-                    vg.add_edge(uriref, value)
+                    vg.add_node(value, label=get_english_label(g, value))
+                    vg.add_edge(uriref, value, property=prop)
 
                     if depth - 1 > 0:
                         item_l.append((value, depth - 1))
 
-    with multiprocessing.Pool(processes=4) as pool:
+    with multiprocessing.Pool(processes=6) as pool:
         vgraphs = pool.starmap(populate_network_graph, item_l)
         for vg2 in vgraphs:
             vg = compose(vg, vg2)
@@ -118,36 +121,15 @@ def paralellized_populate_network_graph(uriref, depth=2):
     return vg
 
 
-def get_label(node):
-    q_id = node.split('/')[-1]
-    rv = requests.get(node, headers={'Accept': 'application/json'})
-    info = rv.json()
-    label = info.get('entities', {}) \
-        .get(q_id, {}).get('labels', {}) \
-        .get('en', {}).get('value', None)
-
-    return label
-
-
-def get_node_labels(vgraph):
-    nodes = vgraph.nodes()
-    with multiprocessing.Pool(processes=4) as pool:
-        labels = pool.map(get_label, nodes)
-        nodes_labels = dict(zip(nodes, labels))
-        set_node_attributes(vgraph, 'label', nodes_labels)
-
-
 class GraphView(Resource):
     def __init__(self):
         self.parser = RequestParser()
         self.parser.add_argument('id', type=str, required=True)
-        self.lock = threading.RLock()
 
     def get(self):
         args = self.parser.parse_args()
         id = args['id']
 
-        vgraph = paralellized_populate_network_graph(wd[id])
-        get_node_labels(vgraph)
+        vgraph = parallel_populate_network_graph(wd[id])
 
         return node_link_data(vgraph)

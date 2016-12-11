@@ -1,10 +1,23 @@
 function drawGraph(json) {
-    var tip = d3.tip()
-    .attr('class', 'd3-tip')
-    .offset([-10, 0])
-    .html(function (d) {
-        return "<span style='color:red'>" + d.label + "</span>";
-    });
+
+    var div = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("display", "none");
+
+    function mouseover() {
+        div.style("display", "inline");
+    }
+
+    function mousemove(d) {
+        div
+        .text(d.label)
+        .style("left", (d3.event.pageX - 34) + "px")
+        .style("top", (d3.event.pageY - 12) + "px");
+    }
+
+    function mouseout() {
+        div.style("display", "none");
+    }
 
     var width  = window.innerWidth * 0.8,
         height = window.innerHeight * 0.8;
@@ -19,10 +32,7 @@ function drawGraph(json) {
     .charge(-100)
     .size([width, height]);
 
-
-    svg.call(tip);
-    force
-    .nodes(json.nodes)
+    force.nodes(json.nodes)
     .links(json.links)
     .start();
 
@@ -30,7 +40,10 @@ function drawGraph(json) {
     .data(json.links)
     .enter().append("line")
     .attr("class", "link")
-    .style("stroke-width", 2);
+    .style("stroke-width", 2)
+    .on('mouseover', mouseover)
+    .on('mouseout', mouseout)
+    .on('mousemove', mousemove);
 
     var node = svg.selectAll(".node")
     .data(json.nodes)
@@ -40,8 +53,9 @@ function drawGraph(json) {
 
     node.append("circle")
     .attr("r", "5")
-    .on('mouseover', tip.show)
-    .on('mouseout', tip.hide)
+    .on('mouseover', mouseover)
+    .on('mouseout', mouseout)
+    .on('mousemove', mousemove)
     .on('click', function (d) {
         window.open(d.id);
     });
