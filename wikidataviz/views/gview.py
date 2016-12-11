@@ -84,7 +84,7 @@ def parallel_populate_network_graph(uriref, depth=2):
     g.load(uriref)
 
     vg = networkx.Graph()
-    vg.add_node(uriref, label=get_english_label(g, uriref))
+    vg.add_node(uriref)
     if depth < 1:
         return vg
 
@@ -119,6 +119,7 @@ def parallel_populate_network_graph(uriref, depth=2):
         for vg2 in vgraphs:
             vg = compose(vg, vg2)
 
+    vg.add_node(uriref, label=get_english_label(g, uriref), root=True)
     return vg
 
 

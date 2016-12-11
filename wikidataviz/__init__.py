@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import make_response
 from flask import render_template
 from flask import send_from_directory
 from flask_restful import Api
@@ -36,7 +37,9 @@ def index(qid):
 
 @app.route('/js/<path:path>')
 def send_js(path):
-    return send_from_directory('js', path)
+    resp = make_response(send_from_directory('js', path), 200)
+    # resp.headers['Cache-Control'] = 'no-cache, must-revalidate'
+    return resp
 
 
 if __name__ == '__main__':
