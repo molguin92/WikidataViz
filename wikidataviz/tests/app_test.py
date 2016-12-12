@@ -4,7 +4,7 @@ from unittest import TestCase
 import time
 from networkx.readwrite.json_graph import node_link_graph
 
-from wikidataviz import app
+from wikidataviz import app, cache
 
 q1 = """
 {
@@ -556,6 +556,9 @@ q1 = """
 
 class BaseTest(TestCase):
     def setUp(self):
+        with app.app_context():
+            cache.clear()
+
         app.config['TESTING'] = True
         self.client = app.test_client()
 

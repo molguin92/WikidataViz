@@ -17,9 +17,11 @@ wdata = Namespace('https://www.wikidata.org/wiki/Special:EntityData/')
 
 app = Flask(__name__)
 api = Api(app)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 app.secret_key = os.environ.get('WIKIDATAVIZ_SECRET_KEY', '1234')
 app.config['RESULT_TTL_SECONDS'] = 1800
+app.config['CACHE_CONFIG'] = {'CACHE_TYPE': 'redis'}
+
+cache = Cache(app, config=app.config['CACHE_CONFIG'])
 
 conn = Redis()
 queue = Queue(connection=conn)
@@ -48,7 +50,3 @@ def send_js(path):
     resp = make_response(send_from_directory('js', path), 200)
     # resp.headers['Cache-Control'] = 'no-cache, must-revalidate'
     return resp
-
-
-if __name__ == '__main__':
-    app.run()
