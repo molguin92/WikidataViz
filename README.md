@@ -1,4 +1,5 @@
 # WIKIDATA VISUALIZATION SERVICE
+Build status: [![Build Status](https://travis-ci.org/molguin92/WikidataViz.svg?branch=master)](https://travis-ci.org/molguin92/WikidataViz)
 
 This small webservice allows a user to visually explore the relationship between different Wikidata entities.
 
