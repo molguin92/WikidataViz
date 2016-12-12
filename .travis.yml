@@ -4,6 +4,7 @@ python:
 - '3.5'
 before_install:
 - echo "It is-a-me, Mario!"
+- echo "Trigger a fucking build already man."
 install:
 - pip install -r requirements.txt
 services:
