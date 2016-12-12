@@ -16,7 +16,7 @@ This small webservice allows a user to visually explore the relationship between
 git clone git@github.com:molguin92/WikidataViz.git
 ```
 
-- Create a virtual environment to run install the Python libraries and activate it:
+- Create a virtual environment to install the Python libraries and activate it:
 
 ```bash
 cd WikidataViz
