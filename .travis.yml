@@ -5,11 +5,12 @@ python:
 before_install:
 - echo "It is-a-me, Mario!"
 - echo "Trigger a fucking build already man."
-- rq worker &
 install:
 - pip install -r requirements.txt
 services:
 - redis-server
+before_script:
+- rq worker &
 script: python run_tests.py
 notifications:
   email: false
