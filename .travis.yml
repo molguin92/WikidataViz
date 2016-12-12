@@ -5,6 +5,7 @@ python:
 before_install:
 - echo "It is-a-me, Mario!"
 - echo "Trigger a fucking build already man."
+- rq worker &
 install:
 - pip install -r requirements.txt
 services:
@@ -13,4 +14,5 @@ script: python run_tests.py
 notifications:
   email: false
 after_success:
+- killall rq
 - echo "Bah bye."
