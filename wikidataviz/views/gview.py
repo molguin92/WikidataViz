@@ -35,6 +35,9 @@ def populate_network_graph(uriref, depth=2):
     :param depth: How many recursive steps to perform.
     :return: The networkX graph representing the given entity.
     """
+
+    print('Building subgraph for {}. Depth = {}.'.format(uriref, depth))
+
     if depth < 1:
         return networkx.Graph()
 
