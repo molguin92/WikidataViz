@@ -7,3 +7,4 @@ matplotlib
 gunicorn
 rq
 redis
+flask-cache

@@ -7,7 +7,7 @@ from networkx.readwrite.json_graph import node_link_data
 from rdflib import RDF
 from rdflib.exceptions import UniquenessError
 
-from wikidataviz.views.gview import wikibase
+from wikidataviz import cache, wikibase
 
 
 def get_english_label(rdf_g, subject):
@@ -19,6 +19,7 @@ def get_english_label(rdf_g, subject):
         return None
 
 
+@cache.memoize(timeout=60)
 def populate_network_graph(uriref, depth=2):
     """
     This functions populates the network graph for a specific RDF entity in
@@ -72,6 +73,7 @@ def populate_network_graph(uriref, depth=2):
     return vg
 
 
+@cache.memoize(timeout=60)
 def parallel_populate_network_graph(uriref, depth=2):
     print('Building relationship graph for {}.'.format(uriref))
 
@@ -120,5 +122,6 @@ def parallel_populate_network_graph(uriref, depth=2):
     return vg
 
 
+@cache.memoize(timeout=60)
 def deferred_graph_build(uriref):
     return node_link_data(parallel_populate_network_graph(uriref))

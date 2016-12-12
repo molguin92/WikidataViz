@@ -3,13 +3,21 @@ from flask import make_response
 from flask import render_template
 from flask import send_from_directory
 from flask_restful import Api
+from rdflib import Namespace
 from redis import Redis
 from rq import Queue
 from itsdangerous import URLSafeSerializer
 import os
+from flask_cache import Cache
+
+wikibase = Namespace('http://wikiba.se/ontology-beta#')
+wd = Namespace('http://www.wikidata.org/entity/')
+schema = Namespace('http://schema.org/')
+wdata = Namespace('https://www.wikidata.org/wiki/Special:EntityData/')
 
 app = Flask(__name__)
 api = Api(app)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 app.secret_key = os.environ.get('WIKIDATAVIZ_SECRET_KEY', '1234')
 app.config['RESULT_TTL_SECONDS'] = 1800
 
