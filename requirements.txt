@@ -3,7 +3,6 @@ flask-restful
 requests
 rdflib
 networkx
-matplotlib
 gunicorn
 rq
 redis
