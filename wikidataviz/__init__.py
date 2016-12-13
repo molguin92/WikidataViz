@@ -18,9 +18,9 @@ wdata = Namespace('https://www.wikidata.org/wiki/Special:EntityData/')
 app = Flask(__name__)
 api = Api(app)
 app.secret_key = os.environ.get('WIKIDATAVIZ_SECRET_KEY', '1234')
-app.config['RESULT_TTL_SECONDS'] = 1800
+app.config['RESULT_TTL_SECONDS'] = 600
 app.config['CACHE_CONFIG'] = {'CACHE_TYPE': 'redis',
-                              'CACHE_DEFAULT_TIMEOUT': 1800}
+                              'CACHE_DEFAULT_TIMEOUT': 3600}
 
 cache = Cache(app, config=app.config['CACHE_CONFIG'])
 

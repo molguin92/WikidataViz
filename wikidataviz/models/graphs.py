@@ -42,6 +42,8 @@ def populate_network_graph(uriref, depth=2):
     vg = networkx.Graph()
     vg.add_node(uriref, label=get_english_label(g, uriref))
 
+    next_level = []
+
     for prop, p, o in g.triples((None, RDF.type, wikibase.Property)):
         dclaim = g.value(subject=prop, predicate=wikibase.directClaim)
 
@@ -55,8 +57,9 @@ def populate_network_graph(uriref, depth=2):
                 vg.add_edge(uriref, value, label=get_english_label(g, prop))
 
                 if depth - 1 > 0:
-                    vg2 = populate_network_graph(depth - 1)(value)
-                    vg = compose(vg, vg2)
+                    next_level.append(value)
+                    # vg2 = populate_network_graph(depth - 1)(value)
+                    # vg = compose(vg, vg2)
 
         except UniquenessError:
             for s, p, value in g.triples((uriref, dclaim, None)):
@@ -67,8 +70,15 @@ def populate_network_graph(uriref, depth=2):
                                 label=get_english_label(g, prop))
 
                     if depth - 1 > 0:
-                        vg2 = populate_network_graph(depth - 1)(value)
-                        vg = compose(vg, vg2)
+                        next_level.append(value)
+                        # vg2 = populate_network_graph(depth - 1)(value)
+                        # vg = compose(vg, vg2)
+
+    if depth - 1 > 0:
+        print('Building next level. Depth = {}.'.format(uriref, depth - 1))
+        for item in next_level:
+            vg2 = populate_network_graph(depth - 1)(item)
+            vg = compose(vg, vg2)
 
     return vg
 
@@ -113,7 +123,7 @@ def parallel_populate_network_graph(uriref, depth=2):
                     if depth - 1 > 0:
                         item_l.append((value, depth - 1))
 
-    with multiprocessing.Pool(processes=6) as pool:
+    with multiprocessing.Pool(processes=4) as pool:
         vgraphs = pool.starmap(populate_network_graph, item_l)
         for vg2 in vgraphs:
             vg = compose(vg, vg2)

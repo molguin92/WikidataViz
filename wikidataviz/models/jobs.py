@@ -10,7 +10,8 @@ from wikidataviz import job_serializer, app, queue
 def enqueue_job_and_return(function, *args):
     try:
         job = queue.enqueue(function, *args,
-                            result_ttl=app.config['RESULT_TTL_SECONDS'])
+                            result_ttl=app.config['RESULT_TTL_SECONDS'],
+                            timeout=600)
         return {
                    'job': job_serializer.dumps(job.id),
                    'submitted': datetime.now(timezone.utc).isoformat()
