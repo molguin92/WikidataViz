@@ -66,10 +66,9 @@
 
     #main {
         transition: margin-left .5s;
-        padding: 16px;
     }
 
-    @media screen and (max-height: 450px) {
+    @media screen{
       .sidenav {padding-top: 15px;}
       .sidenav a {font-size: 18px;}
     }
@@ -104,12 +103,20 @@
         transform: rotate(45deg) translate(-8px, -8px) ;
     }
 
+    #load{
+        width:100%;
+        height:100%;
+        position:fixed;
+        z-index:9999;
+        background:url("https://www.creditmutuel.fr/cmne/fr/banques/webservices/nswr/images/loading.gif") no-repeat center center rgba(0,0,0,0)
+    }
+
 </style>
 <body>
 <script>
     function drawGraph(json) {
 
-        var div = d3.select("body").append("div")
+        var div = d3.select("#main").append("div")
         .attr("class", "tooltip")
         .style("display", "none");
 
@@ -131,7 +138,7 @@
         var width  = window.innerWidth * 0.8,
             height = window.innerHeight * 0.8;
 
-        var svg = d3.select("body").append("svg")
+        var svg = d3.select("#main").append("svg")
         .attr("width", width)
         .attr("height", height);
 
@@ -191,9 +198,10 @@
         var req = new XMLHttpRequest();
         req.open('GET', "/job?id=" + job_id, true);
         req.send();
-        req.onreadystatechange = function (e) {
+        req.onreadystatechange = function (e) {           
             if (req.readyState == 4 && req.status == 200) {
                 var result = JSON.parse(req.responseText).result;
+                document.getElementById('load').style.visibility="hidden"; 
                 drawGraph(result);
             }
             else if (req.readyState == 4) {
@@ -229,12 +237,12 @@
         x.classList.toggle("change");
         if (open){
             document.getElementById("mySidenav").style.width = "0";
-            document.getElementById("container").style.marginLeft = "0";
+            document.getElementById("main").style.marginLeft = "0";
             open = false;
         }
         else{
             document.getElementById("mySidenav").style.width = "250px";
-            document.getElementById("container").style.marginLeft = "250px"; 
+            document.getElementById("main").style.marginLeft = "250px"; 
             open = true;
         }
     }
@@ -270,18 +278,19 @@
 
 </script>
 
+<div id="main">
+    <div id="load"></div>
+    <div id="mySidenav" class="sidenav">
+        <br>WikiData Entity ID (or URL):<br><br>
+        <input type="text" id="queryInput" name="qid"><br><br>
+        <input type="button" value="Generar Gráfico" onclick="makeQuery()"/>     
+    </div>
 
-<div id="mySidenav" class="sidenav">
-    <br>WikiData Entity ID (or URL):<br>
-    <input type="text" id="queryInput" name="qid"><br>
-    <input type="button" value="Generar Gráfico" onclick="makeQuery()"/>     
+    <div class="container" id="container" onclick="toggleNav(this)">
+      <div class="bar1"></div>
+      <div class="bar2"></div>
+      <div class="bar3"></div>
+    </div>
 </div>
-
-<div class="container" id="container" onclick="toggleNav(this)">
-  <div class="bar1"></div>
-  <div class="bar2"></div>
-  <div class="bar3"></div>
-</div>
-
 
 </body>
