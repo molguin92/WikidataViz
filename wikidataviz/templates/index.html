@@ -52,7 +52,7 @@
         transition: 0.3s
     }
 
-    .sidenav a:hover, .offcanvas a:focus{
+    .sidenav a:hover, .offcanvas a:focus {
         color: #f1f1f1;
     }
 
@@ -70,8 +70,13 @@
     }
 
     @media screen and (max-height: 450px) {
-      .sidenav {padding-top: 15px;}
-      .sidenav a {font-size: 18px;}
+        .sidenav {
+            padding-top: 15px;
+        }
+
+        .sidenav a {
+            font-size: 18px;
+        }
     }
 
     .container {
@@ -89,8 +94,8 @@
 
     /* Rotate first bar */
     .change .bar1 {
-        -webkit-transform: rotate(-45deg) translate(-9px, 6px) ;
-        transform: rotate(-45deg) translate(-9px, 6px) ;
+        -webkit-transform: rotate(-45deg) translate(-9px, 6px);
+        transform: rotate(-45deg) translate(-9px, 6px);
     }
 
     /* Fade out the second bar */
@@ -100,8 +105,8 @@
 
     /* Rotate last bar */
     .change .bar3 {
-        -webkit-transform: rotate(45deg) translate(-8px, -8px) ;
-        transform: rotate(45deg) translate(-8px, -8px) ;
+        -webkit-transform: rotate(45deg) translate(-8px, -8px);
+        transform: rotate(45deg) translate(-8px, -8px);
     }
 
 </style>
@@ -204,66 +209,70 @@
         }
     }
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "/entity?id=" + "{{ data|safe }}", true);
-    xhr.send();
+    var wd_id = "{{ data|safe }}";
 
-    xhr.addEventListener("readystatechange", function (e) {
-            if (xhr.readyState == 4 && xhr.status == 202) {
-                // request done
-                var job_info = JSON.parse(xhr.responseText);
-                console.log(xhr.responseText);
-                var job_id = job_info.job;
-                setTimeout(function () {
-                    get_job_result(job_id);
-                }, 1000);
-            }
-        },
-        false
-    );
+    if (wd_id != "") {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', "/entity?id=" + wd_id, true);
+        xhr.send();
+
+        xhr.addEventListener("readystatechange", function (e) {
+                if (xhr.readyState == 4 && xhr.status == 202) {
+                    // request done
+                    var job_info = JSON.parse(xhr.responseText);
+                    console.log(xhr.responseText);
+                    var job_id = job_info.job;
+                    setTimeout(function () {
+                        get_job_result(job_id);
+                    }, 1000);
+                }
+            },
+            false
+        );
+    }
 </script>
 
 <script>
     var open = false;
-    function toggleNav(x){
+    function toggleNav(x) {
         x.classList.toggle("change");
-        if (open){
+        if (open) {
             document.getElementById("mySidenav").style.width = "0";
             document.getElementById("container").style.marginLeft = "0";
             open = false;
         }
-        else{
+        else {
             document.getElementById("mySidenav").style.width = "250px";
-            document.getElementById("container").style.marginLeft = "250px"; 
+            document.getElementById("container").style.marginLeft = "250px";
             open = true;
         }
     }
 </script>
 
 <script type="text/javascript">
-    var baseUrl = location.protocol + "//" + location.host   
-    function isWikidataUrl(str){
+    var baseUrl = location.protocol + "//" + location.host;
+    function isWikidataUrl(str) {
         var pattern = new RegExp('^(https?:\/\/)?' +
-                                    'www.wikidata.org/wiki/Q' + '[0-9]+$');
+            'www.wikidata.org/wiki/Q' + '[0-9]+$');
         return pattern.test(str);
     }
 
-    function isWikidataId(str){
+    function isWikidataId(str) {
         var pattern = new RegExp('^Q' + '[0-9]+$');
         return pattern.test(str);
     }
 
 
-    function makeQuery(){
+    function makeQuery() {
         var v = document.getElementById("queryInput").value;
-        if (isWikidataUrl(v)){
+        if (isWikidataUrl(v)) {
             v = v.substring(v.lastIndexOf("/"), v.length);
             window.location = baseUrl + "/" + v;
         }
-        else if (isWikidataId(v)){
+        else if (isWikidataId(v)) {
             window.location = baseUrl + "/" + v
         }
-        else{
+        else {
             alert("Contenido ingresado no válido");
         }
     }
@@ -274,13 +283,13 @@
 <div id="mySidenav" class="sidenav">
     <br>WikiData Entity ID (or URL):<br>
     <input type="text" id="queryInput" name="qid"><br>
-    <input type="button" value="Generar Gráfico" onclick="makeQuery()"/>     
+    <input type="button" value="Generar Gráfico" onclick="makeQuery()"/>
 </div>
 
 <div class="container" id="container" onclick="toggleNav(this)">
-  <div class="bar1"></div>
-  <div class="bar2"></div>
-  <div class="bar3"></div>
+    <div class="bar1"></div>
+    <div class="bar2"></div>
+    <div class="bar3"></div>
 </div>
 
 

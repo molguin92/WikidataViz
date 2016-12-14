@@ -38,7 +38,7 @@ api.add_resource(JobResource, '/job')
 
 @app.route('/')
 def helloworld():
-    return 'plas'
+    return render_template('index.html', data='')
 
 
 @app.route('/<string:qid>')
