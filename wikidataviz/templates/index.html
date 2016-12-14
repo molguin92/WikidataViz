@@ -29,6 +29,81 @@
         pointer-events: none;
     }
 
+    .sidenav {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        transition: 0.5s;
+        padding-top: 60px;
+        color: #818181;
+    }
+
+    .sidenav a {
+        padding: 8px 8px 8px 32px;
+        text-decoration: none;
+        font-size: 25px;
+        color: #818181;
+        display: block;
+        transition: 0.3s
+    }
+
+    .sidenav a:hover, .offcanvas a:focus{
+        color: #f1f1f1;
+    }
+
+    .sidenav .closebtn {
+        position: absolute;
+        top: 0;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 50px;
+    }
+
+    #main {
+        transition: margin-left .5s;
+        padding: 16px;
+    }
+
+    @media screen and (max-height: 450px) {
+      .sidenav {padding-top: 15px;}
+      .sidenav a {font-size: 18px;}
+    }
+
+    .container {
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .bar1, .bar2, .bar3 {
+        width: 35px;
+        height: 5px;
+        background-color: #333;
+        margin: 6px 0;
+        transition: 0.4s;
+    }
+
+    /* Rotate first bar */
+    .change .bar1 {
+        -webkit-transform: rotate(-45deg) translate(-9px, 6px) ;
+        transform: rotate(-45deg) translate(-9px, 6px) ;
+    }
+
+    /* Fade out the second bar */
+    .change .bar2 {
+        opacity: 0;
+    }
+
+    /* Rotate last bar */
+    .change .bar3 {
+        -webkit-transform: rotate(45deg) translate(-8px, -8px) ;
+        transform: rotate(45deg) translate(-8px, -8px) ;
+    }
+
 </style>
 <body>
 <script>
@@ -147,3 +222,66 @@
         false
     );
 </script>
+
+<script>
+    var open = false;
+    function toggleNav(x){
+        x.classList.toggle("change");
+        if (open){
+            document.getElementById("mySidenav").style.width = "0";
+            document.getElementById("container").style.marginLeft = "0";
+            open = false;
+        }
+        else{
+            document.getElementById("mySidenav").style.width = "250px";
+            document.getElementById("container").style.marginLeft = "250px"; 
+            open = true;
+        }
+    }
+</script>
+
+<script type="text/javascript">
+    var baseUrl = location.protocol + "//" + location.host   
+    function isWikidataUrl(str){
+        var pattern = new RegExp('^(https?:\/\/)?' +
+                                    'www.wikidata.org/wiki/Q' + '[0-9]+$');
+        return pattern.test(str);
+    }
+
+    function isWikidataId(str){
+        var pattern = new RegExp('^Q' + '[0-9]+$');
+        return pattern.test(str);
+    }
+
+
+    function makeQuery(){
+        var v = document.getElementById("queryInput").value;
+        if (isWikidataUrl(v)){
+            v = v.substring(v.lastIndexOf("/"), v.length);
+            window.location = baseUrl + "/" + v;
+        }
+        else if (isWikidataId(v)){
+            window.location = baseUrl + "/" + v
+        }
+        else{
+            alert("Contenido ingresado no válido");
+        }
+    }
+
+</script>
+
+
+<div id="mySidenav" class="sidenav">
+    <br>WikiData Entity ID (or URL):<br>
+    <input type="text" id="queryInput" name="qid"><br>
+    <input type="button" value="Generar Gráfico" onclick="makeQuery()"/>     
+</div>
+
+<div class="container" id="container" onclick="toggleNav(this)">
+  <div class="bar1"></div>
+  <div class="bar2"></div>
+  <div class="bar3"></div>
+</div>
+
+
+</body>
